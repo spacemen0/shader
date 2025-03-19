@@ -3,7 +3,7 @@ use wgpu::util::DeviceExt;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
+    window::{self, WindowBuilder},
 };
 
 // Vertex shader to transform vertices
@@ -19,7 +19,6 @@ fn vs_main(@builtin(vertex_index) vertex_index: u32) -> @builtin(position) vec4<
 }
 "#;
 
-// Fragment shader for psychedelic effects
 // Fragment shader for psychedelic effects with added grain
 const FRAGMENT_SHADER: &str = r#"
 @group(0) @binding(0)
@@ -47,7 +46,7 @@ fn noise(p: vec2<f32>) -> f32 {
 
 @fragment
 fn fs_main(@builtin(position) pos: vec4<f32>) -> @location(0) vec4<f32> {
-    let resolution = vec2<f32>(800.0, 600.0);
+    let resolution = vec2<f32>(1980.0, 1200.0);
     let position = pos.xy / resolution;
     
     // Circular waves
@@ -55,17 +54,17 @@ fn fs_main(@builtin(position) pos: vec4<f32>) -> @location(0) vec4<f32> {
     let dist = distance(position, center);
     
     // Psychedelic color mixing
-    let r = sin(position.x * 10.0 + time * 0.5) * 0.5 + 0.5;
-    let g = cos(position.y * 8.0 - time * 0.3) * 0.5 + 0.5;
-    let b = sin(dist * 15.0 - time * 0.7) * 0.5 + 0.5;
+    let r = sin(position.x * 10.0 + time * 0.1) * 0.5 + 0.5;
+    let g = cos(position.y * 8.0 - time * 0.2) * 0.5 + 0.5;
+    let b = sin(dist * 15.0 - time * 0.3) * 0.5 + 0.5;
     
     // Warping effect
-    let warp = sin(position.x * 5.0 + time) * cos(position.y * 5.0 + time * 0.5) * 0.1;
+    let warp = sin(position.x * 5.0 + time) * cos(position.y * 5.0 + time * 0.2) * 0.1;
     let warp_pos = position + vec2<f32>(warp, warp);
     
     // Spiral patterns
     let angle = atan2(warp_pos.y - 0.5, warp_pos.x - 0.5);
-    let spiral = sin(dist * 20.0 + angle * 5.0 + time * 0.5) * 0.5 + 0.5;
+    let spiral = sin(dist * 20.0 + angle * 5.0 + time * 0.2) * 0.5 + 0.5;
     
     // Grain effect - high frequency noise
     let grain_intensity = 0.05; // Adjust for more/less grain
@@ -77,16 +76,16 @@ fn fs_main(@builtin(position) pos: vec4<f32>) -> @location(0) vec4<f32> {
     
     // Final color mixing
     let color = vec3<f32>(
-        r * spiral + 0.2 * sin(time + position.x * 5.0),
-        g * spiral + 0.2 * cos(time * 0.7 + position.y * 3.0),
-        b * spiral + 0.2 * sin(time * 0.3 + dist * 10.0)
+        r * spiral + 0.2 * sin(time * 0.2 + position.x * 5.0),
+        g * spiral + 0.2 * cos(time * 0.3 + position.y * 3.0),
+        b * spiral + 0.2 * sin(time * 0.1 + dist * 10.0)
     );
     
     // Apply grain to color
     let color_with_grain = color + vec3<f32>(grain * grain_intensity);
     
     // Pulsing effect
-    let pulse = sin(time * 0.5) * 0.1 + 0.9;
+    let pulse = sin(time * 0.2) * 0.1 + 0.9;
     
     return vec4<f32>(color_with_grain * pulse, 1.0);
 }
@@ -103,7 +102,7 @@ fn main() {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         .with_title("Psychedelic WGPU Shader")
-        .with_inner_size(winit::dpi::PhysicalSize::new(800, 600))
+        .with_fullscreen(Some(window::Fullscreen::Borderless(None)))
         .build(&event_loop)
         .unwrap();
 
